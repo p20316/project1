@@ -3,8 +3,6 @@ import streamlit as st
 import matplotlib.pyplot as plt
 
 
-
-
 # =====================
 # 감정별 키워드와 공감 답변
 # =====================
@@ -51,7 +49,7 @@ emotion_data = {
             "몸도 마음도 쉬고 싶다고 말하는 것 같아."
         ]
     },
-    "RETGETFUL": {
+    "REGRETFUL": {  # ← 오타 수정
         "keywords": ["후회", "실수", "잘못", "망했어", "돌이켜", "미련", "아쉽다", "후회돼", "실패", "그때로"],
         "responses": [
             "이미 충분히 스스로를 돌아보고 있는 것 같아.",
@@ -84,7 +82,8 @@ emotion_data = {
 emotion_colors = {
     "SAD": "#4A6FA5", "JOY": "#FFD166", "ANGRY": "#EF476F",
     "ANXIETY": "#8E7DBE", "LONELY": "#6C757D", "TIRED": "#495057",
-    "RETGETFUL": "#A44A3F", "FECKLESS": "#ADB5BD", "EXPECTATION": "#06D6A0",
+    "REGRETFUL": "#A44A3F",  # ← 오타 수정
+    "FECKLESS": "#ADB5BD", "EXPECTATION": "#06D6A0",
     "CONFUSED": "#B565A7"
 }
 
