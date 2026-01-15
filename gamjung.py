@@ -150,7 +150,7 @@ if user_input:
             fig, ax = plt.subplots()
             bars = ax.bar(emotions, percentages, color=colors)
             ax.set_ylim(0, 100)
-            ax.set_xlabel("감정")
+            ax.set_xlabel("EMOTION")
             ax.set_ylabel("비율(%)")
             ax.set_title("현재 감정 상태")
 
