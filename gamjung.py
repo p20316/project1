@@ -1,6 +1,17 @@
 import random
 import streamlit as st
 import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
+import matplotlib.font_manager as fm
+import matplotlib as mpl
+
+# 한글 폰트 설정 (윈도우 기준)
+font_path = "C:/Windows/Fonts/malgun.ttf"
+font_name = fm.FontProperties(fname=font_path).get_name()
+mpl.rc('font', family=font_name)
+
+# 마이너스 기호 깨짐 방지
+mpl.rcParams['axes.unicode_minus'] = False
 
 
 # =====================
