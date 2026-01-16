@@ -152,9 +152,11 @@ def empathic_response(text):
                 st.session_state.emotion_count[emotion] = st.session_state.emotion_count.get(emotion, 0) + 1
                 return random.choice(data["responses"])
     return random.choice([
-        "그런 일이 있었구나. 조금 더 이야기해 줄래?",
-        "네가 그렇게 느낀 데에는 이유가 있을 것 같아.",
-        "지금 기분이 어떤지 더 말해줘도 괜찮아."
+       "지금 느끼는 걸 말로 딱 잘라 표현하기 어려울 수도 있을 것 같아.",
+       "무슨 일이 있었는지 조금 더 이야기해 줘도 괜찮아.",
+       "감정이 복잡해서 한 단어로 정리 안 될 때도 있지.",
+       "지금 이 순간의 너 상태를 그냥 편하게 말해도 돼.",
+       "정확한 감정이 아니어도, 네 얘기를 듣고 싶어."
     ])
 # =====================
 # 4. UI 및 입력 처리
