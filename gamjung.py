@@ -28,9 +28,16 @@ emotion_data = {
 }
 
 emotion_colors = {
-    "SAD": "#4A6FA5", "JOY": "#FFD166", "ANGRY": "#EF476F", "ANXIETY": "#8E7DBE",
-    "LONELY": "#6C757D", "TIRED": "#495057", "REGRETFUL": "#A44A3F",
-    "FECKLESS": "#ADB5BD", "EXPECTATION": "#06D6A0", "CONFUSED": "#B565A7"
+    "SAD": "#4A6FA5", 
+    "JOY": "#FFD166", 
+    "ANGRY": "#EF476F",
+    "ANXIETY": "#8E7DBE",
+    "LONELY": "#6C757D", 
+    "TIRED": "#495057", 
+    "REGRETFUL": "#A44A3F",
+    "FECKLESS": "#ADB5BD", 
+    "EXPECTATION": "#06D6A0",
+    "CONFUSED": "#B565A7"
 }
 
 # =====================
