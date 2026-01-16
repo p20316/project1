@@ -1,13 +1,17 @@
+import random
+import streamlit as st
+import matplotlib.pyplot as plt
+import matplotlib.font_manager as fm
+
 # =====================
-# 기본 라이브러리 불러오기
+# matplotlib 한글 폰트 설정 (환경 안전)
 # =====================
-import random                      # 공감 응답을 랜덤으로 선택하기 위해 사용
-import streamlit as st              # Streamlit 웹 앱 프레임워크
-import matplotlib.pyplot as plt     # 감정 통계를 막대그래프로 시각화
+plt.rcParams["font.family"] = "Malgun Gothic"
+plt.rcParams["axes.unicode_minus"] = False
 
 
 # =====================
-# 감정별 키워드 & 공감 응답 데이터
+# 감정 데이터
 # =====================
 emotion_data = {
     "SAD": {
@@ -25,176 +29,91 @@ emotion_data = {
         ]
     },
     "ANGRY": {
-        "keywords": ["화나", "짜증", "열받아", "분해", "빡쳐", "억울", "분노", "열받네", "짜증나", "화가나"],
+        "keywords": ["화나", "짜증", "열받아", "분해", "빡쳐", "억울", "분노"],
         "responses": [
             "그 상황이면 화날 수밖에 없었을 것 같아.",
             "참고 넘기기엔 마음이 너무 상했을 것 같아."
         ]
-    },
-    "ANXIETY": {
-        "keywords": ["불안", "걱정", "초조", "무서워", "긴장", "조마조마", "불편", "떨려", "겁나", "불안해"],
-        "responses": [
-            "불안할 때는 모든 게 확실하지 않게 느껴지지.",
-            "지금 많이 긴장하고 있는 것 같아."
-        ]
-    },
-    "LONELY": {
-        "keywords": ["외로워", "혼자", "쓸쓸", "고독", "적적", "공허해", "외롭다", "혼자인", "쓸쓸해", "허전"],
-        "responses": [
-            "혼자라고 느껴질 때 마음이 더 무거워지지.",
-            "누군가 곁에 있었으면 좋겠다는 마음이 느껴져."
-        ]
-    },
-    "TIRED": {
-        "keywords": ["피곤", "지쳐", "번아웃", "힘 빠져", "녹초", "기운없어", "지침", "지쳤어", "피곤해", "탈진"],
-        "responses": [
-            "정말 오래 버텨온 것 같아.",
-            "몸도 마음도 쉬고 싶다고 말하는 것 같아."
-        ]
-    },
-    "REGRETFUL": {
-        "keywords": ["후회", "실수", "잘못", "망했어", "돌이켜", "미련", "아쉽다", "후회돼", "실패", "그때로"],
-        "responses": [
-            "이미 충분히 스스로를 돌아보고 있는 것 같아.",
-            "그 일 때문에 아직 마음이 많이 남아 있구나."
-        ]
-    },
-    "FECKLESS": {
-        "keywords": ["무기력", "의욕", "아무것도", "귀찮아", "하기싫어", "무의미", "의미없어", "늘어져", "멍해", "아무생각"],
-        "responses": [
-            "아무것도 하고 싶지 않을 만큼 지친 것 같아.",
-            "에너지가 바닥난 느낌이 드는 것 같아."
-        ]
-    },
-    "EXPECTATION": {
-        "keywords": ["기대", "설레", "두근", "바라", "기다려", "희망", "기대돼", "설렘", "좋아질", "앞으로"],
-        "responses": [
-            "그 설렘이 조심스럽게 느껴져.",
-            "마음 한편에서 뭔가를 기대하고 있는 것 같아."
-        ]
-    },
-    "CONFUSED": {
-        "keywords": ["혼란", "헷갈려", "모르겠어", "복잡해", "정리가안돼", "갈피", "혼란스러워", "갈등", "뒤죽박죽", "애매해"],
-        "responses": [
-            "머릿속이 정리되지 않은 느낌이네.",
-            "지금은 방향이 잘 안 보일 수도 있을 것 같아."
-        ]
     }
 }
 
-
-# =====================
-# 감정별 그래프 색상 지정
-# =====================
 emotion_colors = {
     "SAD": "#4A6FA5",
     "JOY": "#FFD166",
-    "ANGRY": "#EF476F",
-    "ANXIETY": "#8E7DBE",
-    "LONELY": "#6C757D",
-    "TIRED": "#495057",
-    "REGRETFUL": "#A44A3F",
-    "FECKLESS": "#ADB5BD",
-    "EXPECTATION": "#06D6A0",
-    "CONFUSED": "#B565A7"
+    "ANGRY": "#EF476F"
 }
 
 
 # =====================
-# Streamlit 세션 상태 초기화
+# 세션 상태 초기화
 # =====================
-# 감정 카운트 저장
 if "emotion_count" not in st.session_state:
     st.session_state.emotion_count = {e: 0 for e in emotion_data}
 
-# 대화 로그 저장
 if "chat_log" not in st.session_state:
     st.session_state.chat_log = []
 
-# 입력창 값 저장 (초기화용)
 if "user_input" not in st.session_state:
     st.session_state.user_input = ""
 
 
 # =====================
-# 공감 응답 생성 함수
+# 공감 응답 함수
 # =====================
-def empathic_response(user_text):
-    # 모든 감정을 순회하며 키워드 포함 여부 확인
+def empathic_response(text):
     for emotion, data in emotion_data.items():
         for keyword in data["keywords"]:
-            if keyword in user_text:
-                # 해당 감정 카운트 증가
+            if keyword in text:
                 st.session_state.emotion_count[emotion] += 1
-                # 랜덤 공감 응답 반환
                 return random.choice(data["responses"])
 
-    # 어떤 키워드도 매칭되지 않았을 때
-    return random.choice([
-        "그런 일이 있었구나. 조금 더 이야기해 줄래?",
-        "네가 그렇게 느낀 데에는 이유가 있을 것 같아.",
-        "지금 기분이 어떤지 더 말해줘도 괜찮아."
-    ])
+    return "그런 일이 있었구나. 조금 더 이야기해 줄래?"
 
 
 # =====================
-# UI 구성
+# UI
 # =====================
 st.title("공감형 감정 AI")
-st.write("감정을 자유롭게 적어 주세요. `종료`라고 입력하면 분석 결과를 보여줘요.")
 
-# 입력창 (key 필수 → 초기화 가능)
 user_input = st.text_input("나:", key="user_input")
+send = st.button("전송")
 
 
 # =====================
-# 입력 처리 로직
+# 입력 처리
 # =====================
-if user_input:
-    # 사용자 발화 로그 저장
+if send and user_input:
     st.session_state.chat_log.append(("나", user_input))
 
-    # 종료 입력 감지
     if "종료" in user_input:
         total = sum(st.session_state.emotion_count.values())
 
+        st.subheader("📊 감정 분석 결과")
+
         if total == 0:
-            st.write("아직 감정이 뚜렷하게 드러나진 않았어.")
+            st.write("분석할 만큼의 감정 표현이 없었어.")
         else:
-            # 감정별 퍼센트 계산 (0 제외)
-            emotion_stats = [
+            stats = [
                 (e, round((c / total) * 100, 1))
                 for e, c in st.session_state.emotion_count.items()
                 if c > 0
             ]
+            stats.sort(key=lambda x: x[1], reverse=True)
 
-            # 퍼센트 기준 내림차순 정렬
-            emotion_stats.sort(key=lambda x: x[1], reverse=True)
-
-            st.subheader("📊 감정 분석 결과")
-
-            for e, p in emotion_stats:
-                st.write(f"- **{e}**: {p}%")
-
-            # 그래프 데이터 준비
-            emotions = [e for e, _ in emotion_stats]
-            percentages = [p for _, p in emotion_stats]
+            emotions = [e for e, _ in stats]
+            percents = [p for _, p in stats]
             colors = [emotion_colors[e] for e in emotions]
 
-            # 막대그래프 생성
             fig, ax = plt.subplots()
-            bars = ax.bar(emotions, percentages, color=colors)
+            bars = ax.bar(emotions, percents, color=colors)
             ax.set_ylim(0, 100)
-            ax.set_xlabel("EMOTION")
-            ax.set_ylabel("PERCENT (%)")
-            ax.set_title("CURRENT EMOTIONAL STATE")
+            ax.set_ylabel("퍼센트 (%)")
+            ax.set_title("현재 감정 상태")
 
-            # 최고 감정에 별 표시
-            max_index = percentages.index(max(percentages))
-            max_bar = bars[max_index]
+            max_idx = percents.index(max(percents))
             ax.text(
-                max_bar.get_x() + max_bar.get_width() / 2,
-                max_bar.get_height() + 2,
+                bars[max_idx].get_x() + 0.4,
+                percents[max_idx] + 2,
                 "★",
                 ha="center",
                 fontsize=16
@@ -202,20 +121,14 @@ if user_input:
 
             st.pyplot(fig)
 
-            st.write("이건 판단이 아니라, 네가 표현해 온 감정의 흐름이야.")
-            st.write("이야기해 줘서 고마워.")
-
-        # ===== 종료 후 전체 초기화 =====
+        # === 종료 후 초기화 ===
         st.session_state.emotion_count = {e: 0 for e in emotion_data}
         st.session_state.chat_log = []
         st.session_state.user_input = ""
 
     else:
-        # 일반 대화 처리
-        ai_response = empathic_response(user_input)
-        st.session_state.chat_log.append(("AI", ai_response))
-
-        # 입력창 비우기
+        ai = empathic_response(user_input)
+        st.session_state.chat_log.append(("AI", ai))
         st.session_state.user_input = ""
 
 
