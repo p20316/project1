@@ -25,14 +25,15 @@ emotion_colors = {
 }
 
 # =====================
-# 2. 세션 상태 초기화
+# 2. 세션 상태 초기화 함수
 # =====================
-if "emotion_count" not in st.session_state:
+def reset_data():
     st.session_state.emotion_count = {e: 0 for e in emotion_data}
-if "chat_log" not in st.session_state:
     st.session_state.chat_log = []
-if "show_analysis" not in st.session_state:
     st.session_state.show_analysis = False
+
+if "emotion_count" not in st.session_state:
+    reset_data()
 
 # =====================
 # 3. 로직 함수
@@ -41,7 +42,6 @@ def empathic_response(text):
     for emotion, data in emotion_data.items():
         for keyword in data["keywords"]:
             if keyword in text:
-                # KeyError 방지를 위한 .get() 활용
                 st.session_state.emotion_count[emotion] = st.session_state.emotion_count.get(emotion, 0) + 1
                 return random.choice(data["responses"])
     return "그런 일이 있었구나. 조금 더 이야기해 줄래?"
@@ -50,9 +50,8 @@ def empathic_response(text):
 # 4. UI 및 입력 처리
 # =====================
 st.title("🍀 공감형 감정 AI")
-st.write("지금 느끼는 감정을 적어주세요. `종료`라고 입력하면 분석 결과를 보여드려요.")
+st.write("감정을 적고 **전송**을 누르세요. `종료`라고 입력하면 분석 후 모든 데이터가 초기화됩니다.")
 
-# st.form을 사용하여 전송 후 입력창을 자동으로 비움 (clear_on_submit=True)
 with st.form(key="chat_form", clear_on_submit=True):
     user_input = st.text_input("나의 이야기:")
     submitted = st.form_submit_button("전송")
@@ -61,24 +60,25 @@ if submitted and user_input:
     text = user_input.strip()
     
     if text == "종료":
+        # '종료' 시 분석 화면으로 전환
         st.session_state.show_analysis = True
     else:
-        # 대화 및 감정 데이터 저장
+        # 일반 대화 시 분석 화면 꺼둠
+        st.session_state.show_analysis = False
         response = empathic_response(text)
         st.session_state.chat_log.append(("나", text))
         st.session_state.chat_log.append(("AI", response))
 
 # =====================
-# 5. 감정 분석 결과 (막대 그래프)
+# 5. 감정 분석 결과 및 데이터 즉시 초기화
 # =====================
 if st.session_state.show_analysis:
     total = sum(st.session_state.emotion_count.values())
     
     if total > 0:
         st.divider()
-        st.subheader("📊 오늘의 감정 분석 결과")
+        st.subheader("📊 감정 분석 보고서")
         
-        # 비율 계산 및 정렬
         stats = [(e, (c / total * 100)) for e, c in st.session_state.emotion_count.items() if c > 0]
         stats.sort(key=lambda x: x[1], reverse=True)
 
@@ -86,37 +86,37 @@ if st.session_state.show_analysis:
         percentages = [s[1] for s in stats]
         colors = [emotion_colors.get(e, "#999999") for e in emotions]
 
-        # Matplotlib 막대 그래프 생성
         fig, ax = plt.subplots(figsize=(10, 5))
         bars = ax.bar(emotions, percentages, color=colors)
-        
         ax.set_ylim(0, 100)
         ax.set_ylabel("Percentage (%)")
-        ax.set_title("Your Emotional State (%)", fontsize=15)
+        ax.set_title("Your Emotional Flow", fontsize=15)
         
-        # 막대 위에 % 수치 표시
         for bar in bars:
             yval = bar.get_height()
             ax.text(bar.get_x() + bar.get_width()/2, yval + 1, f'{yval:.1f}%', ha='center', va='bottom')
 
         st.pyplot(fig)
-        st.write("이야기해 줘서 고마워. 오늘 네 마음은 이런 흐름이었어.")
+        st.write("결과가 출력되었습니다. 다음 대화를 시작하면 이전 내용은 자동으로 사라집니다.")
+        
+        # 중요: 그래프를 보여준 후 바로 세션 데이터를 초기화하여 다음 시행 준비
+        # 버튼을 누르지 않아도 내부 데이터는 초기화된 상태가 됩니다.
+        if st.button("새로운 상담 시작 (데이터 삭제)"):
+            reset_data()
+            st.rerun()
     else:
-        st.warning("분석할 감정 데이터가 아직 없어요. 감정 단어를 포함해 대화해 보세요!")
-    
-    # 초기화 버튼
-    if st.button("새로운 상담 시작하기"):
-        st.session_state.emotion_count = {e: 0 for e in emotion_data}
-        st.session_state.chat_log = []
-        st.session_state.show_analysis = False
-        st.rerun()
+        st.warning("분석할 감정 데이터가 없습니다.")
+        if st.button("다시 시도"):
+            reset_data()
+            st.rerun()
 
 # =====================
 # 6. 대화 로그 출력
 # =====================
-st.divider()
-for speaker, msg in reversed(st.session_state.chat_log):
-    if speaker == "나":
-        st.info(f"**{speaker}**: {msg}")
-    else:
-        st.success(f"**{speaker}**: {msg}")
+if not st.session_state.show_analysis:
+    st.divider()
+    for speaker, msg in reversed(st.session_state.chat_log):
+        if speaker == "나":
+            st.info(f"**{speaker}**: {msg}")
+        else:
+            st.success(f"**{speaker}**: {msg}")
