@@ -107,13 +107,15 @@ if "user_input" not in st.session_state:
     st.session_state.user_input = ""
 
 # =====================
-# 공감 응답 함수
+# 공감 응답 함수 (KeyError 방지)
 # =====================
 def empathic_response(text):
     for emotion, data in emotion_data.items():
         for keyword in data["keywords"]:
             if keyword in text:
-                st.session_state.emotion_count[emotion] += 1
+                st.session_state.emotion_count[emotion] = (
+                    st.session_state.emotion_count.get(emotion, 0) + 1
+                )
                 return random.choice(data["responses"])
     return "그런 일이 있었구나. 조금 더 이야기해 줄래?"
 
@@ -127,28 +129,36 @@ st.text_input("나:", key="user_input")
 send = st.button("전송")
 
 # =====================
-# 입력 처리
+# 입력 처리 (버튼 기반)
 # =====================
 if send and st.session_state.user_input:
     text = st.session_state.user_input.strip()
     st.session_state.chat_log.append(("나", text))
 
+    # 종료 처리
     if text == "종료":
         total = sum(st.session_state.emotion_count.values())
 
         st.subheader("📊 감정 분석 결과")
 
         if total > 0:
-            stats = [(e, round(c / total * 100, 1)) for e, c in st.session_state.emotion_count.items() if c > 0]
+            stats = [
+                (e, round(c / total * 100, 1))
+                for e, c in st.session_state.emotion_count.items()
+                if c > 0
+            ]
             stats.sort(key=lambda x: x[1], reverse=True)
 
             emotions = [e for e, _ in stats]
             percentages = [p for _, p in stats]
-            colors = [emotion_colors[e] for e in emotions]
+            colors = [emotion_colors.get(e, "#999999") for e in emotions]
 
             fig, ax = plt.subplots()
             bars = ax.bar(emotions, percentages, color=colors)
             ax.set_ylim(0, 100)
+            ax.set_xlabel("EMOTION")
+            ax.set_ylabel("PERCENT (%)")
+            ax.set_title("CURRENT EMOTIONAL STATE")
 
             max_idx = percentages.index(max(percentages))
             ax.text(
@@ -164,7 +174,7 @@ if send and st.session_state.user_input:
         st.write("이건 판단이 아니라, 네가 표현해 온 감정의 흐름이야.")
         st.write("이야기해 줘서 고마워.")
 
-        # 완전 초기화
+        # 🔄 종료 후 완전 초기화
         st.session_state.emotion_count = {e: 0 for e in emotion_data}
         st.session_state.chat_log = []
         st.session_state.user_input = ""
