@@ -128,6 +128,14 @@ if user_input:
     if "종료" in user_input:
         total = sum(st.session_state.emotion_count.values())
 
+     # 종료 후 상태 초기화
+    st.session_state.emotion_count = {e: 0 for e in emotion_data}
+    st.session_state.chat_log = []
+    
+    # 입력창도 초기화하고 싶으면 (선택)
+    st.experimental_rerun()
+
+
         if total == 0:
             st.write("아직 감정이 뚜렷하게 드러나진 않았어.")
         else:
