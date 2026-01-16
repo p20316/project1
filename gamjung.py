@@ -151,8 +151,8 @@ if user_input:
             bars = ax.bar(emotions, percentages, color=colors)
             ax.set_ylim(0, 100)
             ax.set_xlabel("EMOTION")
-            ax.set_ylabel("비율(%)")
-            ax.set_title("현재 감정 상태")
+            ax.set_ylabel("PERCENT(%)")
+            ax.set_title("CURRENT EMOTIONAL STATE")
 
             max_index = percentages.index(max(percentages))
             max_bar = bars[max_index]
