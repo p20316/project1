@@ -3,14 +3,14 @@ import streamlit as st
 import matplotlib.pyplot as plt
 
 # =====================
-# matplotlib 한글 설정 (깨짐 방지)
+# matplotlib 한글 깨짐 방지
 # =====================
 plt.rcParams["font.family"] = "Malgun Gothic"
 plt.rcParams["axes.unicode_minus"] = False
 
 
 # =====================
-# 감정 데이터
+# 감정별 키워드와 공감 응답
 # =====================
 emotion_data = {
     "슬픔": {
@@ -44,16 +44,13 @@ emotion_colors = {
 
 
 # =====================
-# 세션 상태 초기화
+# Streamlit 세션 상태 초기화
 # =====================
 if "emotion_count" not in st.session_state:
     st.session_state.emotion_count = {e: 0 for e in emotion_data}
 
 if "chat_log" not in st.session_state:
     st.session_state.chat_log = []
-
-if "user_input" not in st.session_state:
-    st.session_state.user_input = ""
 
 
 # =====================
@@ -74,7 +71,7 @@ def empathic_response(text):
 st.title("공감형 감정 AI")
 st.write("감정을 자유롭게 적어 주세요. `종료`라고 입력하면 분석 결과를 보여줘요.")
 
-user_input = st.text_input("나:", key="user_input")
+user_input = st.text_input("나:")
 send = st.button("전송")
 
 
@@ -93,29 +90,30 @@ if send and user_input:
         if total == 0:
             st.write("아직 분석할 만큼의 감정 표현이 없었어.")
         else:
-            stats = []
+            emotion_stats = []
             for emotion, count in st.session_state.emotion_count.items():
                 if count > 0:
                     percent = round((count / total) * 100, 1)
-                    stats.append((emotion, percent))
+                    emotion_stats.append((emotion, percent))
 
-            stats.sort(key=lambda x: x[1], reverse=True)
+            # 퍼센트 높은 순으로 정렬
+            emotion_stats.sort(key=lambda x: x[1], reverse=True)
 
-            emotions = [e for e, _ in stats]
-            percents = [p for _, p in stats]
+            emotions = [e for e, _ in emotion_stats]
+            percentages = [p for _, p in emotion_stats]
             colors = [emotion_colors[e] for e in emotions]
 
             fig, ax = plt.subplots()
-            bars = ax.bar(emotions, percents, color=colors)
+            bars = ax.bar(emotions, percentages, color=colors)
             ax.set_ylim(0, 100)
             ax.set_ylabel("퍼센트 (%)")
             ax.set_title("현재 감정 상태")
 
-            # 최고 감정에 별 표시
-            max_idx = percents.index(max(percents))
+            # 가장 높은 감정에 별 표시
+            max_index = percentages.index(max(percentages))
             ax.text(
-                bars[max_idx].get_x() + bars[max_idx].get_width() / 2,
-                percents[max_idx] + 2,
+                bars[max_index].get_x() + bars[max_index].get_width() / 2,
+                percentages[max_index] + 2,
                 "★",
                 ha="center",
                 fontsize=16
@@ -126,16 +124,14 @@ if send and user_input:
         st.write("이건 판단이 아니라, 네가 표현해 온 감정의 흐름이야.")
         st.write("이야기해 줘서 고마워.")
 
-        # ===== 완전 초기화 =====
+        # ===== 종료 후 상태 초기화 =====
         st.session_state.emotion_count = {e: 0 for e in emotion_data}
         st.session_state.chat_log = []
-        st.session_state.user_input = ""
 
     else:
         # 일반 대화
         ai_response = empathic_response(user_input)
         st.session_state.chat_log.append(("AI", ai_response))
-        st.session_state.user_input = ""
 
 
 # =====================
