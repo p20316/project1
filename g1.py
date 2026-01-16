@@ -60,7 +60,9 @@ def empathic_response(text):
             if keyword in text:
                 st.session_state.emotion_count[emotion] = st.session_state.emotion_count.get(emotion, 0) + 1
                 return random.choice(data["responses"])
-    return "그런 일이 있었구나. 조금 더 이야기해 줄래?"
+    return "그런 일이 있었구나. 조금 더 이야기해 줄래?",
+           "네가 그렇게 느낀 데에는 이유가 있을 것 같아.",
+           "지금 기분이 어떤지 더 말해줘도 괜찮아."
 
 # =====================
 # 4. UI 및 입력 처리
