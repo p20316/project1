@@ -1,10 +1,13 @@
-import random
-import streamlit as st
-import matplotlib.pyplot as plt
+# =====================
+# 기본 라이브러리 불러오기
+# =====================
+import random                      # 공감 응답을 랜덤으로 선택하기 위해 사용
+import streamlit as st              # Streamlit 웹 앱 프레임워크
+import matplotlib.pyplot as plt     # 감정 통계를 막대그래프로 시각화
 
 
 # =====================
-# 감정별 키워드와 공감 답변
+# 감정별 키워드 & 공감 응답 데이터
 # =====================
 emotion_data = {
     "SAD": {
@@ -49,7 +52,7 @@ emotion_data = {
             "몸도 마음도 쉬고 싶다고 말하는 것 같아."
         ]
     },
-    "REGRETFUL": {  # ← 오타 수정
+    "REGRETFUL": {
         "keywords": ["후회", "실수", "잘못", "망했어", "돌이켜", "미련", "아쉽다", "후회돼", "실패", "그때로"],
         "responses": [
             "이미 충분히 스스로를 돌아보고 있는 것 같아.",
@@ -79,34 +82,54 @@ emotion_data = {
     }
 }
 
+
+# =====================
+# 감정별 그래프 색상 지정
+# =====================
 emotion_colors = {
-    "SAD": "#4A6FA5", "JOY": "#FFD166", "ANGRY": "#EF476F",
-    "ANXIETY": "#8E7DBE", "LONELY": "#6C757D", "TIRED": "#495057",
-    "REGRETFUL": "#A44A3F",  # ← 오타 수정
-    "FECKLESS": "#ADB5BD", "EXPECTATION": "#06D6A0",
+    "SAD": "#4A6FA5",
+    "JOY": "#FFD166",
+    "ANGRY": "#EF476F",
+    "ANXIETY": "#8E7DBE",
+    "LONELY": "#6C757D",
+    "TIRED": "#495057",
+    "REGRETFUL": "#A44A3F",
+    "FECKLESS": "#ADB5BD",
+    "EXPECTATION": "#06D6A0",
     "CONFUSED": "#B565A7"
 }
 
 
 # =====================
-# Streamlit 상태 초기화
+# Streamlit 세션 상태 초기화
 # =====================
+# 감정 카운트 저장
 if "emotion_count" not in st.session_state:
     st.session_state.emotion_count = {e: 0 for e in emotion_data}
+
+# 대화 로그 저장
 if "chat_log" not in st.session_state:
     st.session_state.chat_log = []
 
+# 입력창 값 저장 (초기화용)
+if "user_input" not in st.session_state:
+    st.session_state.user_input = ""
+
 
 # =====================
-# 공감 응답 함수
+# 공감 응답 생성 함수
 # =====================
-def empathic_response(user_input):
+def empathic_response(user_text):
+    # 모든 감정을 순회하며 키워드 포함 여부 확인
     for emotion, data in emotion_data.items():
         for keyword in data["keywords"]:
-            if keyword in user_input:
+            if keyword in user_text:
+                # 해당 감정 카운트 증가
                 st.session_state.emotion_count[emotion] += 1
+                # 랜덤 공감 응답 반환
                 return random.choice(data["responses"])
 
+    # 어떤 키워드도 매칭되지 않았을 때
     return random.choice([
         "그런 일이 있었구나. 조금 더 이야기해 줄래?",
         "네가 그렇게 느낀 데에는 이유가 있을 것 같아.",
@@ -115,56 +138,60 @@ def empathic_response(user_input):
 
 
 # =====================
-# UI
+# UI 구성
 # =====================
 st.title("공감형 감정 AI")
 st.write("감정을 자유롭게 적어 주세요. `종료`라고 입력하면 분석 결과를 보여줘요.")
 
-user_input = st.text_input("나:", "")
+# 입력창 (key 필수 → 초기화 가능)
+user_input = st.text_input("나:", key="user_input")
 
+
+# =====================
+# 입력 처리 로직
+# =====================
 if user_input:
+    # 사용자 발화 로그 저장
     st.session_state.chat_log.append(("나", user_input))
 
+    # 종료 입력 감지
     if "종료" in user_input:
         total = sum(st.session_state.emotion_count.values())
-
-     # 종료 후 상태 초기화
-    st.session_state.emotion_count = {e: 0 for e in emotion_data}
-    st.session_state.chat_log = []
-    
-    # 입력창도 초기화하고 싶으면 (선택)
-    st.experimental_rerun()
-
 
         if total == 0:
             st.write("아직 감정이 뚜렷하게 드러나진 않았어.")
         else:
+            # 감정별 퍼센트 계산 (0 제외)
             emotion_stats = [
                 (e, round((c / total) * 100, 1))
                 for e, c in st.session_state.emotion_count.items()
                 if c > 0
             ]
 
+            # 퍼센트 기준 내림차순 정렬
             emotion_stats.sort(key=lambda x: x[1], reverse=True)
 
             st.subheader("📊 감정 분석 결과")
+
             for e, p in emotion_stats:
                 st.write(f"- **{e}**: {p}%")
 
+            # 그래프 데이터 준비
             emotions = [e for e, _ in emotion_stats]
             percentages = [p for _, p in emotion_stats]
             colors = [emotion_colors[e] for e in emotions]
 
+            # 막대그래프 생성
             fig, ax = plt.subplots()
             bars = ax.bar(emotions, percentages, color=colors)
             ax.set_ylim(0, 100)
             ax.set_xlabel("EMOTION")
-            ax.set_ylabel("PERCENT(%)")
+            ax.set_ylabel("PERCENT (%)")
             ax.set_title("CURRENT EMOTIONAL STATE")
 
+            # 최고 감정에 별 표시
             max_index = percentages.index(max(percentages))
             max_bar = bars[max_index]
-
             ax.text(
                 max_bar.get_x() + max_bar.get_width() / 2,
                 max_bar.get_height() + 2,
@@ -178,9 +205,18 @@ if user_input:
             st.write("이건 판단이 아니라, 네가 표현해 온 감정의 흐름이야.")
             st.write("이야기해 줘서 고마워.")
 
+        # ===== 종료 후 전체 초기화 =====
+        st.session_state.emotion_count = {e: 0 for e in emotion_data}
+        st.session_state.chat_log = []
+        st.session_state.user_input = ""
+
     else:
+        # 일반 대화 처리
         ai_response = empathic_response(user_input)
         st.session_state.chat_log.append(("AI", ai_response))
+
+        # 입력창 비우기
+        st.session_state.user_input = ""
 
 
 # =====================
