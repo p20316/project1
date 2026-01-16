@@ -75,7 +75,7 @@ with st.form(key="chat_form", clear_on_submit=True):
 if submitted and user_input:
     text = user_input.strip()
     
-    if 종료 in user_input:
+    if "종료" in text:
         # '종료' 시 분석 화면으로 전환
         st.session_state.show_analysis = True
     else:
