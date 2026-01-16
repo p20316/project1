@@ -1,10 +1,9 @@
 import random
 import streamlit as st
 import matplotlib.pyplot as plt
-import matplotlib.font_manager as fm
 
 # =====================
-# matplotlib 한글 폰트 설정 (환경 안전)
+# matplotlib 한글 설정 (깨짐 방지)
 # =====================
 plt.rcParams["font.family"] = "Malgun Gothic"
 plt.rcParams["axes.unicode_minus"] = False
@@ -14,22 +13,22 @@ plt.rcParams["axes.unicode_minus"] = False
 # 감정 데이터
 # =====================
 emotion_data = {
-    "SAD": {
-        "keywords": ["슬퍼", "우울", "힘들어", "눈물", "외로워", "상처", "아파", "허무", "공허", "서러워", "눈물나"],
+    "슬픔": {
+        "keywords": ["슬퍼", "우울", "힘들어", "눈물", "외로워", "상처", "아파", "허무", "공허", "서러워"],
         "responses": [
             "많이 힘들었겠다. 그 감정을 혼자서 버텨온 것 같아.",
             "지금 마음이 많이 아파 보인다. 그렇게 느껴도 괜찮아."
         ]
     },
-    "JOY": {
-        "keywords": ["기뻐", "행복", "좋아", "신나", "즐거워", "만족", "웃겨", "뿌듯", "기분좋아", "설레", "재밌어"],
+    "기쁨": {
+        "keywords": ["기뻐", "행복", "좋아", "신나", "즐거워", "만족", "뿌듯", "설레"],
         "responses": [
             "그 말에서 기분 좋은 에너지가 느껴져.",
             "요즘 그런 순간이 있다는 게 참 다행이야."
         ]
     },
-    "ANGRY": {
-        "keywords": ["화나", "짜증", "열받아", "분해", "빡쳐", "억울", "분노"],
+    "분노": {
+        "keywords": ["화나", "짜증", "열받아", "억울", "분해", "빡쳐"],
         "responses": [
             "그 상황이면 화날 수밖에 없었을 것 같아.",
             "참고 넘기기엔 마음이 너무 상했을 것 같아."
@@ -38,9 +37,9 @@ emotion_data = {
 }
 
 emotion_colors = {
-    "SAD": "#4A6FA5",
-    "JOY": "#FFD166",
-    "ANGRY": "#EF476F"
+    "슬픔": "#4A6FA5",
+    "기쁨": "#FFD166",
+    "분노": "#EF476F"
 }
 
 
@@ -66,7 +65,6 @@ def empathic_response(text):
             if keyword in text:
                 st.session_state.emotion_count[emotion] += 1
                 return random.choice(data["responses"])
-
     return "그런 일이 있었구나. 조금 더 이야기해 줄래?"
 
 
@@ -74,6 +72,7 @@ def empathic_response(text):
 # UI
 # =====================
 st.title("공감형 감정 AI")
+st.write("감정을 자유롭게 적어 주세요. `종료`라고 입력하면 분석 결과를 보여줘요.")
 
 user_input = st.text_input("나:", key="user_input")
 send = st.button("전송")
@@ -85,19 +84,21 @@ send = st.button("전송")
 if send and user_input:
     st.session_state.chat_log.append(("나", user_input))
 
-    if "종료" in user_input:
+    # 종료 처리
+    if user_input.strip() == "종료":
         total = sum(st.session_state.emotion_count.values())
 
         st.subheader("📊 감정 분석 결과")
 
         if total == 0:
-            st.write("분석할 만큼의 감정 표현이 없었어.")
+            st.write("아직 분석할 만큼의 감정 표현이 없었어.")
         else:
-            stats = [
-                (e, round((c / total) * 100, 1))
-                for e, c in st.session_state.emotion_count.items()
-                if c > 0
-            ]
+            stats = []
+            for emotion, count in st.session_state.emotion_count.items():
+                if count > 0:
+                    percent = round((count / total) * 100, 1)
+                    stats.append((emotion, percent))
+
             stats.sort(key=lambda x: x[1], reverse=True)
 
             emotions = [e for e, _ in stats]
@@ -110,9 +111,10 @@ if send and user_input:
             ax.set_ylabel("퍼센트 (%)")
             ax.set_title("현재 감정 상태")
 
+            # 최고 감정에 별 표시
             max_idx = percents.index(max(percents))
             ax.text(
-                bars[max_idx].get_x() + 0.4,
+                bars[max_idx].get_x() + bars[max_idx].get_width() / 2,
                 percents[max_idx] + 2,
                 "★",
                 ha="center",
@@ -121,14 +123,18 @@ if send and user_input:
 
             st.pyplot(fig)
 
-        # === 종료 후 초기화 ===
+        st.write("이건 판단이 아니라, 네가 표현해 온 감정의 흐름이야.")
+        st.write("이야기해 줘서 고마워.")
+
+        # ===== 완전 초기화 =====
         st.session_state.emotion_count = {e: 0 for e in emotion_data}
         st.session_state.chat_log = []
         st.session_state.user_input = ""
 
     else:
-        ai = empathic_response(user_input)
-        st.session_state.chat_log.append(("AI", ai))
+        # 일반 대화
+        ai_response = empathic_response(user_input)
+        st.session_state.chat_log.append(("AI", ai_response))
         st.session_state.user_input = ""
 
 
